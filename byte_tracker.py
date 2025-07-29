@@ -9,6 +9,8 @@ import torch.nn.functional as F
 from kalman_filter import KalmanFilter
 import matching
 from basetrack import BaseTrack, TrackState
+from utils import stars, hashtags
+import logging
 
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
@@ -156,7 +158,18 @@ class BYTETracker(object):
         self.max_time_lost = self.buffer_size
         self.kalman_filter = KalmanFilter()
 
+        logging.basicConfig(
+            filename='app.log',
+            filemode='w',  # Overwrite the log file each run
+            format='%(message)s',
+            level=logging.INFO
+        )
+        self.logger = logging.getLogger("app")
+        self.logger.info("Application started")
+
     def update(self, dets_):
+        logger = self.logger
+
         self.frame_id += 1
         activated_starcks = []
         refind_stracks = []
@@ -176,6 +189,13 @@ class BYTETracker(object):
         scores_keep = scores[remain_inds]
         scores_second = scores[inds_second]
 
+        logger.info(stars(''))
+        logger.info(stars(f'FRAME {self.frame_id}'))
+        logger.info(stars(''))
+        logger.info(F'\n')
+        logger.info(f'len high confidence dets -> {len(dets)}')
+        logger.info(f'len low confidence dets -> {len(dets_second)}')
+
         if len(dets) > 0:
             '''Detections'''
             detections = [STrack(STrack.tlbr_to_tlwh(tlbr), s) for
@@ -183,6 +203,8 @@ class BYTETracker(object):
         else:
             detections = []
 
+        logger.info('')
+        logger.info(hashtags('LEVEL 1'))
         ''' Add newly detected tracklets to tracked_stracks'''
         unconfirmed = []
         tracked_stracks = []  # type: list[STrack]
@@ -210,7 +232,14 @@ class BYTETracker(object):
             else:
                 track.re_activate(det, self.frame_id, new_id=False)
                 refind_stracks.append(track)
+        
+        logger.info(f'confirmed tracks -> {len(strack_pool)}')
+        logger.info(f'matches -> {len(matches)}')
+        logger.info(f'unmatched_confirmed_track_indices -> {len(u_track)}')
+        logger.info(f'unmatched_high_confidence_detection_indices -> {len(u_detection)}')
 
+        logger.info('')
+        logger.info(hashtags('LEVEL 2'))
         ''' Step 3: Second association, with low score detection boxes'''
         # association the untrack to the low score detections
         if len(dets_second) > 0:
@@ -238,6 +267,13 @@ class BYTETracker(object):
                 track.mark_lost()
                 lost_stracks.append(track)
 
+        logger.info(f'remained_tracking_tracks -> {len(r_tracked_stracks)}')
+        logger.info(f'matches -> {len(matches)}')
+        logger.info(f'unmatched_remained_track_indices -> {len(u_track)}')
+        logger.info(f'unmatched_low_score_detection_indices -> {len(u_detection_second)}')
+
+        logger.info('')
+        logger.info(hashtags('LEVEL 3'))
         '''Deal with unconfirmed tracks, usually tracks with only one beginning frame'''
         detections = [detections[i] for i in u_detection]
         dists = matching.iou_distance(unconfirmed, detections)
@@ -252,13 +288,24 @@ class BYTETracker(object):
             track.mark_removed()
             removed_stracks.append(track)
 
+        logger.info(f'remained_high_confidence_detections -> {len(detections)}')
+        logger.info(f'unconfirmed_tracks -> {len(unconfirmed)}')
+        logger.info(f'matches -> {len(matches)}')
+        logger.info(f'unmatched_unconfirmed_track_indices -> {len(u_unconfirmed)}')
+        logger.info(f'unmatched_remained_high_score_detection_indices -> {len(u_detection)}')
+
         """ Step 4: Init new stracks"""
+        inited = 0
         for inew in u_detection:
             track = detections[inew]
             if track.score < self.det_thresh:
                 continue
+            inited += 1
             track.activate(self.kalman_filter, self.frame_id)
             activated_starcks.append(track)
+        
+        logger.info('')
+        logger.info(f'inited -> {inited}')
         """ Step 5: Update state"""
         for track in self.lost_stracks:
             if self.frame_id - track.end_frame > self.max_time_lost:
@@ -277,6 +324,14 @@ class BYTETracker(object):
         self.tracked_stracks, self.lost_stracks = remove_duplicate_stracks(self.tracked_stracks, self.lost_stracks)
         # get scores of lost tracks
         output_stracks = [track for track in self.tracked_stracks if track.is_activated]
+
+        logger.info('')
+        logger.info(f'TRACKING_TRACKS -> {len(tracked_stracks)}')
+        logger.info(f'LOST_TRACKS -> {len(lost_stracks)}')
+        # logger.info(f'ALIVE_TRACKS -> {len(Track.ALIVE_TRACKS)}')
+        # logger.info(f'CONFIRMED_TRACKS -> {len(Track.CONFIRMED_TRACKS)}')
+        # logger.info(f'UNCONFIRMED_TRACKS -> {len(Track.UNCONFIRMED_TRACKS)}')
+        logger.info(f'DELETED_TRACKS -> {len(removed_stracks)}')
 
         return output_stracks
 
