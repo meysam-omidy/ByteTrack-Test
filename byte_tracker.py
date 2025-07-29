@@ -234,9 +234,12 @@ class BYTETracker(object):
                 refind_stracks.append(track)
         
         logger.info(f'confirmed tracks -> {len(strack_pool)}')
-        logger.info(f'matches -> {len(matches)}')
-        logger.info(f'unmatched_confirmed_track_indices -> {len(u_track)}')
-        logger.info(f'unmatched_high_confidence_detection_indices -> {len(u_detection)}')
+        logger.info(f'len matches -> {len(matches)}')
+        logger.info(f'len unmatched_confirmed_track_indices -> {len(u_track)}')
+        logger.info(f'len unmatched_high_confidence_detection_indices -> {len(u_detection)}')
+        logger.info(f'matches -> {matches}')
+        logger.info(f'unmatched_confirmed_track_indices -> {u_track}')
+        logger.info(f'unmatched_high_confidence_detection_indices -> {u_detection}')
 
         logger.info('')
         logger.info(hashtags('LEVEL 2'))
@@ -268,9 +271,12 @@ class BYTETracker(object):
                 lost_stracks.append(track)
 
         logger.info(f'remained_tracking_tracks -> {len(r_tracked_stracks)}')
-        logger.info(f'matches -> {len(matches)}')
-        logger.info(f'unmatched_remained_track_indices -> {len(u_track)}')
-        logger.info(f'unmatched_low_score_detection_indices -> {len(u_detection_second)}')
+        logger.info(f'len matches -> {len(matches)}')
+        logger.info(f'len unmatched_remained_track_indices -> {len(u_track)}')
+        logger.info(f'len unmatched_low_score_detection_indices -> {len(u_detection_second)}')
+        logger.info(f'matches -> {matches}')
+        logger.info(f'unmatched_remained_track_indices -> {u_track}')
+        logger.info(f'unmatched_low_score_detection_indices -> {u_detection_second}')
 
         logger.info('')
         logger.info(hashtags('LEVEL 3'))
@@ -290,9 +296,12 @@ class BYTETracker(object):
 
         logger.info(f'remained_high_confidence_detections -> {len(detections)}')
         logger.info(f'unconfirmed_tracks -> {len(unconfirmed)}')
-        logger.info(f'matches -> {len(matches)}')
-        logger.info(f'unmatched_unconfirmed_track_indices -> {len(u_unconfirmed)}')
-        logger.info(f'unmatched_remained_high_score_detection_indices -> {len(u_detection)}')
+        logger.info(f'len matches -> {len(matches)}')
+        logger.info(f'len unmatched_unconfirmed_track_indices -> {len(u_unconfirmed)}')
+        logger.info(f'len unmatched_remained_high_score_detection_indices -> {len(u_detection)}')
+        logger.info(f'matches -> {matches}')
+        logger.info(f'unmatched_unconfirmed_track_indices -> {u_unconfirmed}')
+        logger.info(f'unmatched_remained_high_score_detection_indices -> {u_detection}')
 
         """ Step 4: Init new stracks"""
         inited = 0
