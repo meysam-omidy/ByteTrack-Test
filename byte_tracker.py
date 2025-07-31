@@ -221,6 +221,11 @@ class BYTETracker(object):
         dists = matching.iou_distance(strack_pool, detections)
         if not self.args.mot20:
             dists = matching.fuse_score(dists, detections)
+
+        logger.info(f'confirmed_tracks -> {np.array([x.tlbr for x in strack_pool])}')
+        logger.info(f'high_confidence_detections -> {np.array([x.tlbr for x in detections])}')
+        logger.info(f'len confirmed tracks -> {len(strack_pool)}')
+
         matches, u_track, u_detection = matching.linear_assignment(dists, thresh=self.args.match_thresh)
 
         for itracked, idet in matches:
@@ -233,9 +238,6 @@ class BYTETracker(object):
                 track.re_activate(det, self.frame_id, new_id=False)
                 refind_stracks.append(track)
         
-        logger.info(f'confirmed_tracks -> {np.array([x.tlbr for x in strack_pool])}')
-        logger.info(f'high_confidence_detections -> {np.array([x.tlbr for x in detections])}')
-        logger.info(f'confirmed tracks -> {len(strack_pool)}')
         logger.info(f'len matches -> {len(matches)}')
         logger.info(f'len unmatched_confirmed_track_indices -> {len(u_track)}')
         logger.info(f'len unmatched_high_confidence_detection_indices -> {len(u_detection)}')
@@ -254,6 +256,11 @@ class BYTETracker(object):
         else:
             detections_second = []
         r_tracked_stracks = [strack_pool[i] for i in u_track if strack_pool[i].state == TrackState.Tracked]
+
+        logger.info(f'remained_tracking_tracks -> {np.array([x.tlbr for x in r_tracked_stracks])}')
+        logger.info(f'low_confidence_detections -> {np.array([x.tlbr for x in detections_second])}')
+        logger.info(f'len remained_tracking_tracks -> {len(r_tracked_stracks)}')
+
         dists = matching.iou_distance(r_tracked_stracks, detections_second)
         matches, u_track, u_detection_second = matching.linear_assignment(dists, thresh=0.5)
         for itracked, idet in matches:
@@ -272,9 +279,6 @@ class BYTETracker(object):
                 track.mark_lost()
                 lost_stracks.append(track)
 
-        logger.info(f'remained_tracking_tracks -> {np.array([x.tlbr for x in r_tracked_stracks])}')
-        logger.info(f'low_confidence_detections -> {np.array([x.tlbr for x in detections_second])}')
-        logger.info(f'len remained_tracking_tracks -> {len(r_tracked_stracks)}')
         logger.info(f'len matches -> {len(matches)}')
         logger.info(f'len unmatched_remained_track_indices -> {len(u_track)}')
         logger.info(f'len unmatched_low_score_detection_indices -> {len(u_detection_second)}')
@@ -289,6 +293,12 @@ class BYTETracker(object):
         dists = matching.iou_distance(unconfirmed, detections)
         if not self.args.mot20:
             dists = matching.fuse_score(dists, detections)
+            
+        logger.info(f'unconfirmed_tracks -> {np.array([x.tlbr for x in unconfirmed])}')
+        logger.info(f'remained_high_confidence_detections -> {np.array([x.tlbr for x in detections])}')
+        logger.info(f'len remained_high_confidence_detections -> {len(detections)}')
+        logger.info(f'len unconfirmed_tracks -> {len(unconfirmed)}')
+
         matches, u_unconfirmed, u_detection = matching.linear_assignment(dists, thresh=0.7)
         for itracked, idet in matches:
             unconfirmed[itracked].update(detections[idet], self.frame_id)
@@ -297,11 +307,7 @@ class BYTETracker(object):
             track = unconfirmed[it]
             track.mark_removed()
             removed_stracks.append(track)
-
-        logger.info(f'unconfirmed_tracks -> {np.array([x.tlbr for x in unconfirmed])}')
-        logger.info(f'remained_high_confidence_detections -> {np.array([x.tlbr for x in detections])}')
-        logger.info(f'len remained_high_confidence_detections -> {len(detections)}')
-        logger.info(f'len unconfirmed_tracks -> {len(unconfirmed)}')
+            
         logger.info(f'len matches -> {len(matches)}')
         logger.info(f'len unmatched_unconfirmed_track_indices -> {len(u_unconfirmed)}')
         logger.info(f'len unmatched_remained_high_score_detection_indices -> {len(u_detection)}')
